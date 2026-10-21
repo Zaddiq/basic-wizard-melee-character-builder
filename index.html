@@ -93,7 +93,8 @@ aside.sheet{position:sticky;top:12px;background:var(--panel);border:1px solid va
 .sheet .nameline{display:flex;gap:8px;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:6px}
 .sheet #name{flex:1;font:700 26px var(--f-display);background:transparent;border:0;padding:0;border-radius:0;min-width:0}
 .sheet .who{font:500 12px var(--f-mono);color:var(--muted);margin-top:6px}
-.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:12px 0}
+.figure{display:none}
+.stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px 0}
 .stat{border:1px solid var(--line);border-radius:3px;padding:6px 8px;background:var(--bg)}
 .stat .k{font:500 11px var(--f-mono);color:var(--muted);letter-spacing:.08em}
 .stat .v{font:600 24px var(--f-mono);font-variant-numeric:tabular-nums}
@@ -113,6 +114,7 @@ summary{cursor:pointer;font:600 12px var(--f-mono);letter-spacing:.08em;text-tra
 .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .toast{font-size:13px;color:var(--ok);min-height:1.2em}
 .help{font-size:12.5px;color:var(--muted)}
+@page{margin:.4in}
 @media print{
   :root,:root[data-theme="dark"]{--bg:#fff;--panel:#fff;--ink:#000;--muted:#444;--line:#999;--accent:#000;--accent-soft:#eee;--warn:#000;--warn-soft:#eee;--bad:#000;--bad-soft:#eee;--ok:#000;color-scheme:light}
   body{padding:0}
@@ -123,6 +125,36 @@ summary{cursor:pointer;font:600 12px var(--f-mono);letter-spacing:.08em;text-tra
   textarea{border:0;resize:none;padding:0}
   tr,li{break-inside:avoid}
   tr.alt{display:none!important}
+  :root,:root[data-theme="dark"]{--ink:#14161f;--muted:#3b3f4f;--line:#b4bbd8;--accent:#1f2a8a;--accent-soft:#fff}
+  body{font-family:Georgia,"Times New Roman",serif;font-size:11pt}
+  aside.sheet{display:flex;flex-direction:column;min-height:9.6in;border:3px double var(--accent);padding:.22in;background:#fff}
+  .sheet .nameline{border-bottom:2px solid var(--accent)}
+  .sheet #name{font-family:Georgia,serif;font-weight:700;color:var(--accent);font-size:26pt}
+  .sheet .who{font-family:Georgia,serif;font-style:italic;font-size:10pt}
+  .top{display:grid;grid-template-columns:minmax(0,28%) minmax(0,1fr);gap:.2in;margin:.15in 0}
+  .stats{grid-template-columns:1fr;gap:.08in;margin:0}
+  .stat{border:1.5px solid var(--accent);background:#fff;text-align:center;padding:.05in}
+  .stat .k{color:var(--accent);font-family:Arial,Helvetica,sans-serif}
+  .stat .v{font-family:Arial,Helvetica,sans-serif;font-weight:700;font-size:20pt}
+  .figure{display:block;border:2px solid var(--accent);position:relative;min-height:3.3in}
+  .figure span{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-style:italic;font-size:8pt;color:var(--accent)}
+  .sheet h3{font-family:Georgia,serif;font-size:12pt;font-weight:700;letter-spacing:0;text-transform:none;color:var(--accent);border-bottom:2px solid var(--accent)}
+  th{font-family:Georgia,serif;color:var(--accent)}
+  textarea#notes{flex:1;min-height:1.4in;height:auto;line-height:24px;font-family:Georgia,serif;background:repeating-linear-gradient(transparent,transparent 23px,var(--line) 23px,var(--line) 24px) local}
+  textarea::placeholder{color:transparent}
+  aside.sheet{min-height:10in;padding:.18in .22in}
+  .sheet .who{margin-top:2px}
+  .top{margin:.1in 0 .05in}
+  .stat{padding:.02in}
+  .stat .k{font-size:8pt}
+  .stat .v{font-size:17pt;line-height:1.15}
+  .figure{min-height:2.7in}
+  .sheet h3{margin:.09in 0 .04in;padding-bottom:1px}
+  th,td{padding-top:2px;padding-bottom:2px}
+  ul.sp{columns:3 130px}
+  textarea#notes{min-height:.9in}
+  #epRow{margin:0}
+  #epRow input{border:0;border-bottom:1px solid var(--accent);border-radius:0;background:transparent;font-size:12pt;width:80px}
 }
 @media (prefers-reduced-motion:no-preference){.spell,button{transition:border-color .12s,background .12s}}
 </style>
@@ -541,12 +573,13 @@ function renderSheet(){
   const sh=P.filter(x=>SHIELDS[x.id]).map(x=>Object.assign({loc:x.loc},SHIELDS[x.id]));
   const spellsByIq=S.spells.map(n=>SPELL_BY[n]).sort((a,b)=>a.iq-b.iq||a.name.localeCompare(b.name));
   $("sheet").innerHTML=`
-  <div class="stats">
+  <div class="top"><div class="stats">
     <div class="stat"><div class="k">ST</div><div class="v">${S.st}</div></div>
     <div class="stat"><div class="k">DX</div><div class="v">${S.dx}</div></div>
     <div class="stat"><div class="k">IQ</div><div class="v">${S.iq}</div></div>
+    <div class="stat"><div class="k">adjDX</div><div class="v">${(cfg.find(c=>c.start)||cfg[0]).adj}</div></div>
     <div class="stat"><div class="k">MA</div><div class="v">${ma()}</div></div>
-  </div>
+  </div><div class="figure"><span>Figure</span></div></div>
   ${S.race==="hobbit"?`<p class="note" style="margin:0">Hobbit: +3 DX on top of the numbers below with missile spells, thrown weapons and missile weapons.</p>`:""}
   <h3>Armor</h3>
   <div style="font-size:14px">${ARMOR[S.armor].n}${ARMOR[S.armor].stops?`: stops ${ARMOR[S.armor].stops} hits per attack, DX −${armorPen()}`:""}${sh.length?`<br>${sh.map(s=>`${s.n} (${s.loc==="Slung"?"slung":"ready at start"}): stops ${s.stops} from the front when ready${s.pen?`, DX −${s.pen}`:""}; slung, it stops nothing from the front but covers the rear hex`).join("<br>")}`:""}</div>
@@ -559,7 +592,7 @@ function renderSheet(){
   ${wrows.length?`<h3>Weapons</h3><div class="scroll"><table><thead><tr><th>Weapon</th><th class="num">Damage</th><th class="num">Min ST</th></tr></thead><tbody>${wrows.join("")}</tbody></table></div>`:""}
   <h3>Spells${S.cls==="wizard"?` (${S.spells.length} of ${S.iq})`:""}</h3>
   ${S.cls==="wizard"?(spellsByIq.length?`<ul class="sp">${spellsByIq.map(s=>`<li><span class="iq">${s.iq}</span> ${esc(s.name)} <span class="iq">${s.type} · ${s.cost==="var"?"var.":s.cost}${s.up?" "+s.up:""}</span></li>`).join("")}</ul>`:`<div class="help">No spells chosen.</div>`):`<div class="help">Fighter: no spells.</div>`}
-  ${hasStaff()?`<div class="help" style="margin-top:6px">Starts with a staff, free. It counts as one of two weapons.</div>`:""}`;
+  ${hasStaff()?`<div class="help noprint" style="margin-top:6px">Starts with a staff, free. It counts as one of two weapons.</div>`:""}`;
   const ep=S.ep;
   $("epRow").innerHTML=`<label class="f" style="flex-direction:row;align-items:center;gap:8px">EP<input id="ep" type="number" min="0" step="10" value="${ep}" style="width:90px"></label>
    <button id="trade"${ep<100?" disabled":""}>Trade 100 EP for 1 point</button>
