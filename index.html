@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Wizard Character Builder</title>
 <style>body{margin:0}img{max-width:100%}</style>
+<title>Wizard Character Builder</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=UnifrakturCook:wght@700&display=swap">
 <style>
 /* Layout: builder steps on the left, a sticky character sheet on the right; stacks on phones. */
@@ -113,6 +113,17 @@ summary{cursor:pointer;font:600 12px var(--f-mono);letter-spacing:.08em;text-tra
 .btnrow{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
 .toast{font-size:13px;color:var(--ok);min-height:1.2em}
 .help{font-size:12.5px;color:var(--muted)}
+@media print{
+  :root,:root[data-theme="dark"]{--bg:#fff;--panel:#fff;--ink:#000;--muted:#444;--line:#999;--accent:#000;--accent-soft:#eee;--warn:#000;--warn-soft:#eee;--bad:#000;--bad-soft:#eee;--ok:#000;color-scheme:light}
+  body{padding:0}
+  header.top,.steps,details,.btnrow,#epRow button,#epRow .help,.noprint{display:none!important}
+  .grid{display:block}
+  aside.sheet{position:static;box-shadow:none;border:0;padding:0}
+  .pill{border:1px solid #000;background:#fff}
+  textarea{border:0;resize:none;padding:0}
+  tr,li{break-inside:avoid}
+  tr.alt{display:none!important}
+}
 @media (prefers-reduced-motion:no-preference){.spell,button{transition:border-color .12s,background .12s}}
 </style>
 
@@ -138,6 +149,7 @@ summary{cursor:pointer;font:600 12px var(--f-mono);letter-spacing:.08em;text-tra
       <div class="row" id="epRow"></div>
       <h3>Notes</h3>
       <textarea id="notes" rows="3" aria-label="Notes" placeholder="Pets, magic items, background"></textarea>
+      <div class="btnrow noprint"><button id="printBtn" class="primary">Print or save as PDF</button></div>
       <details>
         <summary>Save and load</summary>
         <p class="help">The page remembers your last character in this browser. To keep it elsewhere, copy the text below and paste it back later.</p>
@@ -539,9 +551,9 @@ function renderSheet(){
   <h3>Armor</h3>
   <div style="font-size:14px">${ARMOR[S.armor].n}${ARMOR[S.armor].stops?`: stops ${ARMOR[S.armor].stops} hits per attack, DX −${armorPen()}`:""}${sh.length?`<br>${sh.map(s=>`${s.n} (${s.loc==="Slung"?"slung":"ready at start"}): stops ${s.stops} from the front when ready${s.pen?`, DX −${s.pen}`:""}; slung, it stops nothing from the front but covers the rear hex`).join("<br>")}`:""}</div>
   <h3>Adjusted DX by what is ready</h3>
-  <div class="help" style="margin-bottom:6px">Every way to hold your gear. The first row is how you start.</div>
+  <div class="help noprint" style="margin-bottom:6px">Every way to hold your gear. The first row is how you start.</div>
   <div class="scroll"><table><thead><tr><th>Ready</th><th class="num">adjDX</th><th class="num">Stops</th></tr></thead><tbody>
-  ${cfg.map(c=>`<tr><td>${esc(c.label)}${c.start?` <span class="pill">starts ready</span>`:""}${c.cant?`<span class="sm bad-t">Cannot cast spells like this</span>`:""}${c.parts.length?`<span class="sm">${esc(c.parts.join(", "))}</span>`:""}${c.shots.map(t=>`<span class="sm">${esc(t)}</span>`).join("")}</td>
+  ${cfg.map(c=>`<tr${c.start?"":' class="alt"'}><td>${esc(c.label)}${c.start?` <span class="pill">starts ready</span>`:""}${c.cant?`<span class="sm bad-t">Cannot cast spells like this</span>`:""}${c.parts.length?`<span class="sm">${esc(c.parts.join(", "))}</span>`:""}${c.shots.map(t=>`<span class="sm">${esc(t)}</span>`).join("")}</td>
    <td class="num">${c.adj}</td><td class="num">${c.stops}${c.mg?` (${c.stopsMelee} vs melee)`:""}</td></tr>`).join("")}
   </tbody></table></div>
   ${wrows.length?`<h3>Weapons</h3><div class="scroll"><table><thead><tr><th>Weapon</th><th class="num">Damage</th><th class="num">Min ST</th></tr></thead><tbody>${wrows.join("")}</tbody></table></div>`:""}
@@ -615,6 +627,7 @@ $("notes").addEventListener("input",e=>{ S.notes=e.target.value; save(); });
 load();
 $("name").value=S.name; $("notes").value=S.notes;
 S._notes=[]; renderAll();
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
 </script>
 
 </head>
