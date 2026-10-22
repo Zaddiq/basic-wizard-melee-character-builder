@@ -93,7 +93,7 @@ aside.sheet{position:sticky;top:12px;background:var(--panel);border:1px solid va
 .sheet .nameline{display:flex;gap:8px;align-items:baseline;border-bottom:2px solid var(--ink);padding-bottom:6px}
 .sheet #name{flex:1;font:700 26px var(--f-display);background:transparent;border:0;padding:0;border-radius:0;min-width:0}
 .sheet .who{font:500 12px var(--f-mono);color:var(--muted);margin-top:6px}
-.figure{display:none}
+.figure,.printtop,.ptitle,.pname{display:none}
 .stats{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin:12px 0}
 .stat{border:1px solid var(--line);border-radius:3px;padding:6px 8px;background:var(--bg)}
 .stat .k{font:500 11px var(--f-mono);color:var(--muted);letter-spacing:.08em}
@@ -142,17 +142,33 @@ summary{cursor:pointer;font:600 12px var(--f-mono);letter-spacing:.08em;text-tra
   th{font-family:Georgia,serif;color:var(--accent)}
   textarea#notes{flex:1;min-height:1.4in;height:auto;line-height:24px;font-family:Georgia,serif;background:repeating-linear-gradient(transparent,transparent 23px,var(--line) 23px,var(--line) 24px) local}
   textarea::placeholder{color:transparent}
-  aside.sheet{min-height:10in;padding:.18in .22in}
+  .top{display:none!important}
+  .ptitle{display:block;font:700 22pt Georgia,serif;color:var(--accent);line-height:1.1}
+  .pname{display:inline;font:700 12pt Georgia,serif;color:var(--accent);margin-right:.1in}
+  .sheet .nameline{align-items:baseline;margin-top:.04in}
+  .sheet #name{font-size:16pt}
+  .printtop{display:grid;grid-template-columns:1.45in 2.9in minmax(0,1fr);gap:.15in;margin:.12in 0 .04in;align-items:stretch}
+  .pcol{display:grid;min-width:0}
+  .pleft{grid-template-rows:repeat(4,1fr)}
+  .pmid{grid-template-rows:1.05fr .6fr 1.05fr .6fr;border-left:2px solid var(--accent);padding-left:.12in}
+  .prow{display:grid;grid-template-columns:.8in 1fr;align-items:stretch;gap:.06in;margin:.03in 0}
+  .pleft .prow{grid-template-columns:.4in 1fr;margin:0}
+  .plab{font:700 13pt Georgia,serif;color:var(--accent);align-self:center}
+  .pbox{border:2px solid var(--accent);display:flex;align-items:center;justify-content:center;font:700 26pt Arial,Helvetica,sans-serif;color:var(--ink)}
+  .pleft .prow+.prow .pbox{border-top-width:0}
+  .pfig{border:2px solid var(--accent);aspect-ratio:4/5;position:relative;align-self:start;width:100%}
+  .pfig span{position:absolute;bottom:3px;left:0;right:0;text-align:center;font-style:italic;font-size:8pt;color:var(--accent)}
+  aside.sheet{min-height:10.1in;padding:.15in .22in}
   .sheet .who{margin-top:2px}
   .top{margin:.1in 0 .05in}
   .stat{padding:.02in}
   .stat .k{font-size:8pt}
   .stat .v{font-size:17pt;line-height:1.15}
   .figure{min-height:2.7in}
-  .sheet h3{margin:.09in 0 .04in;padding-bottom:1px}
-  th,td{padding-top:2px;padding-bottom:2px}
+  .sheet h3{margin:.06in 0 .03in;padding-bottom:1px}
+  th,td{padding-top:1px;padding-bottom:1px}
   ul.sp{columns:3 130px}
-  textarea#notes{min-height:.9in}
+  textarea#notes{min-height:.25in}
   #epRow{margin:0}
   #epRow input{border:0;border-bottom:1px solid var(--accent);border-radius:0;background:transparent;font-size:12pt;width:80px}
 }
@@ -174,7 +190,8 @@ summary{cursor:pointer;font:600 12px var(--f-mono);letter-spacing:.08em;text-tra
     </div>
 
     <aside class="sheet" aria-label="Character sheet">
-      <div class="nameline"><input id="name" type="text" placeholder="Character name" aria-label="Character name" maxlength="60"></div>
+      <div class="ptitle" id="ptitle"></div>
+      <div class="nameline"><span class="pname">Name</span><input id="name" type="text" placeholder="Character name" aria-label="Character name" maxlength="60"></div>
       <div class="who" id="who"></div>
       <div id="sheet"></div>
       <h3>Experience points</h3>
@@ -398,6 +415,7 @@ function pool(){
 }
 const itemName=id=>W[id]?W[id].n:SHIELDS[id]?SHIELDS[id].n:"";
 const armorPen=()=>ARMOR[S.armor].pen[S.armorSrc==="melee"?"m":"w"];
+const baseMA=()=>S.race==="elf"?12:10;
 function ma(){
   let m=ARMOR[S.armor].ma;
   if(S.race==="elf"){ if(S.armor==="none")m=12; else if(S.armor==="leather")m=10; }
@@ -559,6 +577,7 @@ function renderGear(){
 /* ---------- Render: sheet ---------- */
 function renderSheet(){
   const R=RACES[S.race];
+  $("ptitle").textContent=(S.cls==="wizard"?"Wizard":"Fighter")+" Character Sheet";
   $("who").textContent=`${R.n} ${S.cls==="wizard"?"wizard":"fighter"} · ${S.total} points`;
   const cfg=configs();
   const A=slotA();
@@ -580,6 +599,16 @@ function renderSheet(){
     <div class="stat"><div class="k">adjDX</div><div class="v">${(cfg.find(c=>c.start)||cfg[0]).adj}</div></div>
     <div class="stat"><div class="k">MA</div><div class="v">${ma()}</div></div>
   </div><div class="figure"><span>Figure</span></div></div>
+  <div class="printtop">
+    <div class="pcol pleft">${[["ST",S.st],["DX",S.dx],["IQ",S.iq],["MA",baseMA()]].map(([k,v])=>`<div class="prow"><span class="plab">${k}</span><span class="pbox">${v}</span></div>`).join("")}</div>
+    <div class="pcol pmid">
+      <div class="prow"><span class="plab">Hits</span><span class="pbox"></span></div>
+      <div class="prow"><span class="plab">adj DX</span><span class="pbox">${(cfg.find(c=>c.start)||cfg[0]).adj}</span></div>
+      <div class="prow"><span class="plab">Fatigue</span><span class="pbox"></span></div>
+      <div class="prow"><span class="plab">adj MA</span><span class="pbox">${ma()}</span></div>
+    </div>
+    <div class="pfig"><span>Figure</span></div>
+  </div>
   ${S.race==="hobbit"?`<p class="note" style="margin:0">Hobbit: +3 DX on top of the numbers below with missile spells, thrown weapons and missile weapons.</p>`:""}
   <h3>Armor</h3>
   <div style="font-size:14px">${ARMOR[S.armor].n}${ARMOR[S.armor].stops?`: stops ${ARMOR[S.armor].stops} hits per attack, DX −${armorPen()}`:""}${sh.length?`<br>${sh.map(s=>`${s.n} (${s.loc==="Slung"?"slung":"ready at start"}): stops ${s.stops} from the front when ready${s.pen?`, DX −${s.pen}`:""}; slung, it stops nothing from the front but covers the rear hex`).join("<br>")}`:""}</div>
